@@ -112,6 +112,15 @@ public class UserDataController {
         }
     }
 
+    @PostMapping("/{id}/predictions")
+    public Double getNewTaskPrediction(@PathVariable(value = "id") UUID id,
+                                       @Valid @RequestBody TaskData taskData) {
+        UserData userData = userDataRepository.findById(id)
+                .orElseThrow( () -> new ResourceNotFoundException("UserData", "id", id));
+
+        return taskData.getExpDuration() + userData.getAvgTaskTime() / 2;
+    }
+
     // Get UUID from name
     @GetMapping("/identity/{name}")
     public UUID getIdFromName(@PathVariable(value = "name") String userId) {
