@@ -155,7 +155,7 @@ public class UserData {
      * @param taskData the task data to be added
      */
     public void addTaskData(TaskData taskData) {
-        // Calculuate new average task completion time
+        // Calculate new average task completion time
         Double lastSumTime = this.totalTasksCompleted * this.avgTaskTime;
         this.avgTaskTime = (lastSumTime + taskData.getActualDuration()) / (this.totalTasksCompleted + 1);
 

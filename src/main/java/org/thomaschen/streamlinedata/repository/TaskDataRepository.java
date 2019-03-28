@@ -12,4 +12,5 @@ import java.util.UUID;
 public interface TaskDataRepository extends JpaRepository<TaskData, UUID> {
     public List<TaskData> findAllByOwner(UserData owner);
     public List<TaskData> findAllByOwnerAndTags(UserData owner, String tag);
+    public List<TaskData> findAllByOwnerOrderByCreatedAt(UserData owner);
 }
