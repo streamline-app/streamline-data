@@ -155,11 +155,14 @@ public class UserData {
      * @param taskData the task data to be added
      */
     public void addTaskData(TaskData taskData) {
+
         // Calculate new average task completion time
         Double lastSumTime = this.totalTasksCompleted * this.avgTaskTime;
         this.avgTaskTime = (lastSumTime + taskData.getActualDuration()) / (this.totalTasksCompleted + 1);
 
-        Double currTaskEstFactor = (double) taskData.getActualDuration() / (double) taskData.getExpDuration();
+
+        Double currTaskEstFactor = (taskData.getExpDuration() == 0) ? 0 : (double) taskData.getActualDuration() / (double) taskData.getExpDuration();
+
         this.taskEstFactor = (this.taskEstFactor * this.totalTasksCompleted + currTaskEstFactor) /
                 (this.totalTasksCompleted + 1);
 
@@ -185,6 +188,7 @@ public class UserData {
             this.totalOverTasks = 0;
             this.totalTasksCompleted = 0;
             this.taskEstFactor = 0.0;
+            this.totalTasksCompleted--;
             return;
         }
 
