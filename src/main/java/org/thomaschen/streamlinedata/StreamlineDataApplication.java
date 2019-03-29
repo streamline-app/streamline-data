@@ -30,7 +30,7 @@ public class StreamlineDataApplication {
     }
 
     @GetMapping("/")
-    public String echoUser(Principal principal) {
-        return "Hello " + principal.getName() + "! Welcome to Streamline Data";
+    public String echoUser() {
+        return "Welcome to Streamline Data";
     }
 }
