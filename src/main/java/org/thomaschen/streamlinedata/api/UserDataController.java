@@ -1,10 +1,15 @@
 package org.thomaschen.streamlinedata.api;
 
-import org.apache.catalina.User;
+import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.databind.JsonNode;
+import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.databind.node.ArrayNode;
+import com.fasterxml.jackson.databind.node.ObjectNode;
 import org.springframework.http.ResponseEntity;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.*;
 
+import org.thomaschen.streamlinedata.exceptions.InvalidArithmeticException;
 import org.thomaschen.streamlinedata.exceptions.ResourceNotFoundException;
 import org.thomaschen.streamlinedata.model.TaskData;
 import org.thomaschen.streamlinedata.model.UserData;
@@ -12,8 +17,9 @@ import org.thomaschen.streamlinedata.repository.TaskDataRepository;
 import org.thomaschen.streamlinedata.repository.UserDataRepository;
 
 import javax.validation.Valid;
-import java.security.Principal;
+import java.text.SimpleDateFormat;
 import java.util.List;
+import java.util.TimeZone;
 import java.util.UUID;
 
 @RestController
@@ -89,6 +95,10 @@ public class UserDataController {
         UserData userData = userDataRepository.findById(id)
                 .orElseThrow( () -> new ResourceNotFoundException("UserData", "id", id));
 
+        if (taskData.getExpDuration() == 0) {
+            throw new InvalidArithmeticException("TaskData", "expDuration", "0");
+        }
+
         userData.addTaskData(taskData);
         taskData.setOwner(userData);
 
@@ -112,10 +122,83 @@ public class UserDataController {
         }
     }
 
+    // Get TaskData Points
+    @GetMapping("/{id}/tasks/timeseries")
+    public String getUserTimeSeriesData(@PathVariable(value = "id") UUID id,
+                                        @RequestParam(value="tags", required=false) String tag)  {
+        UserData taskOwner = userDataRepository.findById(id)
+                .orElseThrow( () -> new ResourceNotFoundException("UserData", "id", id));
+
+        List<TaskData> tasks = null;
+        if (tag == null) {
+            tasks = taskDataRepository.findAllByOwnerOrderByCreatedAt(taskOwner);
+        } else {
+            tasks =  taskDataRepository.findAllByOwnerAndTagsOrderByCreatedAt(taskOwner, tag);
+        }
+
+        if (tasks == null) {
+            return "[]";
+        }
+
+        Double runningEstFactor = 0.0;
+        Integer totalTasks = 0;
+
+        ObjectMapper mapper = new ObjectMapper();
+        ArrayNode childNodes = mapper.createArrayNode();
+        for (TaskData taskData : tasks) {
+            JsonNode element = mapper.createObjectNode();
+
+            Double currTaskEstFactor = (double) taskData.getActualDuration() / (double) taskData.getExpDuration();
+            runningEstFactor = (runningEstFactor * totalTasks + currTaskEstFactor) /
+                    (totalTasks + 1);
+
+            ((ObjectNode) element).put("value", runningEstFactor);
+
+            String strDate = null;
+            SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss.SSSXXX");
+            sdf.setTimeZone(TimeZone.getTimeZone("UTC"));
+            strDate = sdf.format(taskData.getCreatedAt().getTime());
+
+            ((ObjectNode) element).put("name", strDate);
+            childNodes.add(element);
+
+            totalTasks++;
+        }
+
+        String timeseries = "";
+        try {
+            timeseries = mapper.writeValueAsString(childNodes);
+        } catch (JsonProcessingException jpe) {
+            System.err.println(jpe.toString());
+        }
+        return timeseries;
+    }
+
+    @PostMapping("/{id}/predictions")
+    public Double getNewTaskPrediction(@PathVariable(value = "id") UUID id,
+                                       @Valid @RequestBody TaskData taskData) {
+        UserData userData = userDataRepository.findById(id)
+                .orElseThrow( () -> new ResourceNotFoundException("UserData", "id", id));
+
+        return taskData.getExpDuration() + userData.getAvgTaskTime() / 2;
+    }
+
     // Get UUID from name
     @GetMapping("/identity/{name}")
     public UUID getIdFromName(@PathVariable(value = "name") String userId) {
         UserData userData = userDataRepository.findByUserId(userId);
         return userData.getId();
+    }
+
+    // Delete all users
+    @DeleteMapping("/")
+    public ResponseEntity<?> deleteAllUsers() {
+        List<UserData> allUsers = userDataRepository.findAll();
+
+        for (UserData user : allUsers) {
+            userDataRepository.delete(user);
+        }
+
+        return ResponseEntity.ok().build();
     }
 }

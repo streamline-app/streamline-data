@@ -31,7 +31,15 @@ public class StreamlineDataWebSecurityConfiguration extends WebSecurityConfigure
     @Override
     protected void configure(HttpSecurity http) throws Exception {
 
-        http
+        http.csrf().disable()
+                .cors()
+                .and()
+                .authorizeRequests()
+                .antMatchers("/**")
+                .permitAll();
+
+
+                /*
                 .cors()
                 .and()
                 .authorizeRequests()
@@ -45,6 +53,7 @@ public class StreamlineDataWebSecurityConfiguration extends WebSecurityConfigure
                 .sessionCreationPolicy(SessionCreationPolicy.STATELESS)
                 .and()
                 .csrf().disable();
+                */
     }
 
 
