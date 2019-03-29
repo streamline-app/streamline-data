@@ -9,6 +9,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.*;
 
+import org.thomaschen.streamlinedata.exceptions.InvalidArithmeticException;
 import org.thomaschen.streamlinedata.exceptions.ResourceNotFoundException;
 import org.thomaschen.streamlinedata.model.TaskData;
 import org.thomaschen.streamlinedata.model.UserData;
@@ -93,6 +94,10 @@ public class UserDataController {
                                    @Valid @RequestBody TaskData taskData) {
         UserData userData = userDataRepository.findById(id)
                 .orElseThrow( () -> new ResourceNotFoundException("UserData", "id", id));
+
+        if (taskData.getExpDuration() == 0) {
+            throw new InvalidArithmeticException("TaskData", "expDuration", "0");
+        }
 
         userData.addTaskData(taskData);
         taskData.setOwner(userData);
