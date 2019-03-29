@@ -144,7 +144,6 @@ public class UserDataController {
         Integer totalTasks = 0;
 
         ObjectMapper mapper = new ObjectMapper();
-        JsonNode rootNode = mapper.createObjectNode();
         ArrayNode childNodes = mapper.createArrayNode();
         for (TaskData taskData : tasks) {
             JsonNode element = mapper.createObjectNode();
@@ -165,12 +164,10 @@ public class UserDataController {
 
             totalTasks++;
         }
-        ((ObjectNode) rootNode).put("series", childNodes);
-
 
         String timeseries = "";
         try {
-            timeseries = mapper.writeValueAsString(rootNode);
+            timeseries = mapper.writeValueAsString(childNodes);
         } catch (JsonProcessingException jpe) {
             System.err.println(jpe.toString());
         }
@@ -191,5 +188,17 @@ public class UserDataController {
     public UUID getIdFromName(@PathVariable(value = "name") String userId) {
         UserData userData = userDataRepository.findByUserId(userId);
         return userData.getId();
+    }
+
+    // Delete all users
+    @DeleteMapping("/")
+    public ResponseEntity<?> deleteAllUsers() {
+        List<UserData> allUsers = userDataRepository.findAll();
+
+        for (UserData user : allUsers) {
+            userDataRepository.delete(user);
+        }
+
+        return ResponseEntity.ok().build();
     }
 }
