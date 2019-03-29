@@ -124,18 +124,27 @@ public class UserDataController {
 
     // Get TaskData Points
     @GetMapping("/{id}/tasks/timeseries")
-    public String getUserTimeSeriesData(@PathVariable(value = "id") UUID id) {
+    public String getUserTimeSeriesData(@PathVariable(value = "id") UUID id,
+                                        @RequestParam(value="tags", required=false) String tag)  {
         UserData taskOwner = userDataRepository.findById(id)
                 .orElseThrow( () -> new ResourceNotFoundException("UserData", "id", id));
 
-        List<TaskData> tasks = taskDataRepository.findAllByOwnerOrderByCreatedAt(taskOwner);
+        List<TaskData> tasks = null;
+        if (tag == null) {
+            tasks = taskDataRepository.findAllByOwnerOrderByCreatedAt(taskOwner);
+        } else {
+            tasks =  taskDataRepository.findAllByOwnerAndTagsOrderByCreatedAt(taskOwner, tag);
+        }
+
+        if (tasks == null) {
+            return "[]";
+        }
 
         Double runningEstFactor = 0.0;
         Integer totalTasks = 0;
 
         ObjectMapper mapper = new ObjectMapper();
         JsonNode rootNode = mapper.createObjectNode();
-        ((ObjectNode) rootNode).put("name", "Estimation Factor");
         ArrayNode childNodes = mapper.createArrayNode();
         for (TaskData taskData : tasks) {
             JsonNode element = mapper.createObjectNode();
