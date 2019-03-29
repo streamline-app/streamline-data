@@ -86,7 +86,7 @@ public class TaskData {
      * @param actualDuration actual duration
      * @param tags tags for the task
      */
-    public TaskData(UserData owner,  Long expDuration, Long actualDuration, List<String> tags) {
+    public TaskData(UserData owner, Long expDuration, Long actualDuration, List<String> tags) {
         this.taskId = UUID.randomUUID();
         this.owner = owner;
         this.expDuration = expDuration;

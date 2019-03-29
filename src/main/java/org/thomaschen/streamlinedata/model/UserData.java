@@ -184,9 +184,9 @@ public class UserData {
             this.avgTaskTime = 0.0;
             this.totalUnderTasks = 0;
             this.totalOverTasks = 0;
-            this.totalTasksCompleted = 0;
             this.taskEstFactor = 0.0;
             this.totalTasksCompleted--;
+
             return;
         }
 
@@ -194,8 +194,9 @@ public class UserData {
         this.avgTaskTime = (lastAvgTimeSum - taskData.getActualDuration()) / (this.totalTasksCompleted - 1);
 
         Double lastTaskEstFactorSum = this.taskEstFactor * (double) this.totalTasksCompleted;
-        this.taskEstFactor = (lastTaskEstFactorSum - (taskData.getActualDuration()/taskData.getExpDuration())) /
+        this.taskEstFactor = (lastTaskEstFactorSum - ((double) taskData.getActualDuration()/ (double)taskData.getExpDuration())) /
                 (this.totalTasksCompleted - 1);
+        this.taskEstFactor = Math.floor(this.taskEstFactor * 10000) / 10000;
 
         if (taskData.getActualDuration() > taskData.getExpDuration()) {
             this.totalOverTasks--;
