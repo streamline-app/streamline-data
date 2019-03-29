@@ -1,4 +1,4 @@
-# streamline-data
+# streamline-data [![Build Status](https://travis-ci.com/streamline-app/streamline-data.svg?branch=develop)](https://travis-ci.com/streamline-app/streamline-data)
 Data analytics engine for streamline core services
 
 ## Testing
@@ -44,5 +44,5 @@ Please refer to the [Git Flow](https://github.com/streamline-app/streamline-clie
 
 ## Versioning
 Tally adheres to Semantic Versioning 2.0.0. Learn more [here](https://semver.org/). <br>
-The current version of streamline-data is `0.0.0`
+The current version of streamline-data is `0.1.0`
 
