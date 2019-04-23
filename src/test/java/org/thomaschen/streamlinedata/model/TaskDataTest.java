@@ -4,16 +4,14 @@ import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
-import java.util.Arrays;
-import java.util.Calendar;
-import java.util.List;
+import java.util.*;
 
 import static org.junit.jupiter.api.Assertions.*;
 
 class TaskDataTest {
     private static TaskData testTaskData;
     private static UserData testUserData;
-    private static List<String> tags;
+    private static Set<String> tags;
 
     @BeforeEach
     void setUp() {
@@ -24,7 +22,10 @@ class TaskDataTest {
                 100,
                 1.212,
                 1256.12);
-        tags = Arrays.asList("tag1", "tag2", "tag3");
+        tags = new HashSet<>();
+        tags.add("tag1");
+        tags.add("tag2");
+        tags.add("tag3");
         testTaskData = new TaskData(testUserData, 1200L, 1000L, tags);
     }
 
@@ -90,11 +91,4 @@ class TaskDataTest {
         assertEquals(1900L, (long) testTaskData.getActualDuration());
     }
 
-    @Test
-    void setTags() {
-        tags = Arrays.asList("tag4");
-        testTaskData.setTags(tags);
-        assertEquals(tags, testTaskData.getTags());
-
-    }
 }

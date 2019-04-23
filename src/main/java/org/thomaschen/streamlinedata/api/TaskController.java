@@ -12,6 +12,7 @@ import org.thomaschen.streamlinedata.repository.UserDataRepository;
 
 import javax.validation.Valid;
 import java.security.Principal;
+import java.util.Collections;
 import java.util.List;
 import java.util.UUID;
 
@@ -57,11 +58,20 @@ public class TaskController {
         return updatedTaskData;
     }
 
-    // Get Specifc TaskData using UUID
+    // Get Specific TaskData using UUID
     @GetMapping("/{id}")
     public TaskData getTaskDataById(@PathVariable(value = "id") UUID id) {
         return taskDataRepository.findById(id)
                 .orElseThrow(() -> new ResourceNotFoundException("TaskData", "id", id));
+    }
+
+    // Get Specific TaskData using UUID
+    @GetMapping("/{id}/tagmask")
+    public double[] getTagMaskById(@PathVariable(value = "id") UUID id) {
+        TaskData taskData = taskDataRepository.findById(id)
+                .orElseThrow(() -> new ResourceNotFoundException("TaskData", "id", id));
+
+        return taskData.getOwner().calcTaskTagMask(taskData);
     }
 
     // Delete Specific TaskData using UUID

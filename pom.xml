@@ -89,6 +89,13 @@
             <artifactId>lombok</artifactId>
         </dependency>
 
+        <!-- Math Libraries -->
+        <dependency>
+            <groupId>org.apache.commons</groupId>
+            <artifactId>commons-math3</artifactId>
+            <version>3.6.1</version>
+        </dependency>
+
         <!-- JUnit Testing Dependencies-->
         <dependency>
             <groupId>org.testcontainers</groupId>

@@ -99,6 +99,9 @@ public class UserData {
     @MapKey(name = "taskId")
     private Map<UUID, TaskData> tasks;
 
+    @ElementCollection(fetch = FetchType.EAGER)
+    private Set<String> tagSet;
+
     /**
      * No Param Constructor
      */
@@ -133,6 +136,7 @@ public class UserData {
         this.updatedAt = Calendar.getInstance(TimeZone.getTimeZone("UTC"));
 
         this.tasks = new HashMap<>();
+        this.tagSet = new TreeSet<>();
     }
 
     /**
@@ -171,6 +175,8 @@ public class UserData {
             this.totalUnderTasks++;
         }
 
+        this.addTaskTagData(taskData);
+
         this.totalTasksCompleted++;
 
     }
@@ -204,6 +210,8 @@ public class UserData {
             this.totalUnderTasks--;
         }
 
+        this.removeTaskTagData(taskData);
+
         this.totalTasksCompleted--;
     }
 
@@ -214,6 +222,57 @@ public class UserData {
     public void removeTaskData(TaskData taskData) {
         this.subtractTaskData(taskData);
         this.tasks.remove(taskData.getTaskId());
+    }
+
+    public void removeTaskTagData(TaskData taskData) {
+        List<String> tags = new ArrayList<>(taskData.getTags());
+        int[] tagCounter = new int[tags.size()];
+
+        // For each remaining task in UserData how many of each tag in TaskData to be removed still exists
+        tasks.forEach((UUID, TaskData)->{
+            for (int i = 0; i < tags.size(); i++) {
+                if (TaskData.getTags().contains( tags.get(i))) {
+                    tagCounter[i]++;
+                }
+            }
+        });
+
+        // For each tag where TaskData to be removed is only owner, remove that tag from UserData tagSet
+        for (int j = 0; j < tagCounter.length; j++) {
+            if (tagCounter[j] == 1) {
+                this.tagSet.remove(tags.get(j));
+            }
+        }
+    }
+
+    public void addTaskTagData(TaskData taskData) {
+        List<String> tags = new ArrayList<>(taskData.getTags());
+        for (String tag : tags) {
+            this.tagSet.add(tag);
+        }
+    }
+
+    public boolean containsTag(String tag) {
+        return tagSet.contains(tag);
+    }
+
+    public double[] calcTaskTagMask(TaskData taskData) {
+        double[] tagMask = new double[this.tagSet.size()];
+
+        Iterator<String> childItr;
+
+        int i = 0;
+        for (String val : tagSet) {
+            childItr = taskData.getTags().iterator();
+            while (childItr.hasNext()) {
+                if (val.equals(childItr.next())) {
+                    tagMask[i] = 1;
+                }
+            }
+            i++;
+        }
+
+        return tagMask;
     }
 
     public UUID getId() {
@@ -280,6 +339,14 @@ public class UserData {
         this.avgTaskTime = avgTaskTime;
     }
 
+    public Set<String> getTagSet() {
+        return tagSet;
+    }
+
+    public void setTagSet(Set<String> tagSet) {
+        this.tagSet = tagSet;
+    }
+
     @Override
     public boolean equals(Object o) {
         if (this == o) return true;
@@ -297,14 +364,13 @@ public class UserData {
     @Override
     public String toString() {
         return "UserData{" +
-                "id=" + id +
-                ",\n userId='" + userId + '\'' +
-                ",\n totalTasksCompleted=" + totalTasksCompleted +
-                ",\n totalUnderTasks=" + totalUnderTasks +
-                ",\n totalOverTasks=" + totalOverTasks +
-                ",\n taskEstFactor=" + taskEstFactor +
-                ",\n avgTaskTime=" + avgTaskTime +
-                ",\n tasks=" + tasks +
+                "id=" + this.getId().toString() +
+                ",\n userId='" + this.getUserId() + '\'' +
+                ",\n totalTasksCompleted=" + this.getTotalTasksCompleted() +
+                ",\n totalUnderTasks=" + this.getTotalUnderTasks() +
+                ",\n totalOverTasks=" + this.getTotalOverTasks() +
+                ",\n taskEstFactor=" + this.getTaskEstFactor() +
+                ",\n avgTaskTime=" + this.getAvgTaskTime() +
                 '}';
     }
 }

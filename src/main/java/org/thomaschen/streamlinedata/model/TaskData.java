@@ -5,6 +5,9 @@ import com.fasterxml.jackson.annotation.JsonIdentityReference;
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.fasterxml.jackson.annotation.ObjectIdGenerators;
 import io.swagger.annotations.ApiModelProperty;
+import org.apache.commons.math3.exception.DimensionMismatchException;
+import org.apache.commons.math3.ml.clustering.Clusterable;
+import org.apache.commons.math3.ml.distance.DistanceMeasure;
 import org.hibernate.annotations.GenericGenerator;
 import org.springframework.data.annotation.CreatedDate;
 import org.springframework.data.jpa.domain.support.AuditingEntityListener;
@@ -13,10 +16,7 @@ import org.springframework.scheduling.annotation.EnableScheduling;
 import javax.persistence.*;
 import javax.validation.constraints.Min;
 import javax.validation.constraints.NotNull;
-import java.util.Calendar;
-import java.util.List;
-import java.util.TimeZone;
-import java.util.UUID;
+import java.util.*;
 
 @Entity
 @Table(name = "tasks")
@@ -25,7 +25,11 @@ import java.util.UUID;
 @JsonIgnoreProperties(value = {"createdAt", "owner"},
         allowGetters = true)
 @JsonIdentityInfo(generator = ObjectIdGenerators.PropertyGenerator.class, property = "taskId")
-public class TaskData {
+public class TaskData implements Clusterable, DistanceMeasure {
+
+    @ApiModelProperty(name = "point", hidden = true)
+    @JsonIgnoreProperties
+    double[] point;
 
     /**
      * Unique identifier for message.
@@ -72,7 +76,7 @@ public class TaskData {
      * Queue of messages that have surpassed threshhold
      */
     @ElementCollection(fetch = FetchType.EAGER)
-    private List<String> tags;
+    private Set<String> tags;
 
     // No Param Constructor
     public TaskData() {
@@ -86,7 +90,7 @@ public class TaskData {
      * @param actualDuration actual duration
      * @param tags tags for the task
      */
-    public TaskData(UserData owner, Long expDuration, Long actualDuration, List<String> tags) {
+    public TaskData(UserData owner, Long expDuration, Long actualDuration, Set<String> tags) {
         this.taskId = UUID.randomUUID();
         this.owner = owner;
         this.expDuration = expDuration;
@@ -116,7 +120,7 @@ public class TaskData {
         return actualDuration;
     }
 
-    public List<String> getTags() {
+    public Set<String> getTags() {
         return tags;
     }
 
@@ -136,7 +140,61 @@ public class TaskData {
         this.actualDuration = actualDuration;
     }
 
-    public void setTags(List<String> tags) {
+    public void setTags(Set<String> tags) {
         this.tags = tags;
+    }
+
+    @Override
+    public String toString() {
+        return "TaskData{" +
+                "\npoint=" + Arrays.toString(this.getPoint()) +
+                ",\ntaskId=" + this.getTaskId().toString() +
+                ",\ncreatedAt=" + this.getCreatedAt().getTimeInMillis() +
+                ",\nowner=" + this.getOwner().getId().toString() +
+                ",\nexpDuration=" + this.getExpDuration() +
+                ",\nactualDuration=" + this.getActualDuration() +
+                ",\ntags=" + String.join(", ", this.getTags()) +
+                '}';
+    }
+
+    @Override
+    public double[] getPoint() {
+        double[] tagPts = this.getOwner().calcTaskTagMask(this);
+        double[] statPts = {(double) expDuration, (double) actualDuration, (double) createdAt.getTimeInMillis()};
+
+        double[] points = new double[tagPts.length + statPts.length];
+
+        int ptCtr = 0;
+
+        for (double val: statPts) {
+            points[ptCtr] = val;
+            ptCtr++;
+        }
+
+        for (double val : tagPts) {
+            points[ptCtr] = val;
+            ptCtr++;
+        }
+
+
+        return points;
+    }
+
+    @Override
+    public double compute(double[] a, double[] b) throws DimensionMismatchException {
+
+        if (a.length < b.length) {
+            throw new DimensionMismatchException(a.length, b.length);
+        } else if (a.length > b.length){
+            throw new DimensionMismatchException(b.length, a.length);
+        }
+
+        double sumTerm = 0.0;
+
+        for (int i = 0; i < a.length && i < b.length; i++) {
+            sumTerm += Math.pow(b[i] - a[i], 2);
+        }
+
+        return Math.sqrt(sumTerm);
     }
 }
