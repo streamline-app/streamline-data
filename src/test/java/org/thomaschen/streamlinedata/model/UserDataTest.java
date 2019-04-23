@@ -4,21 +4,26 @@ import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
-import java.util.Arrays;
-import java.util.Calendar;
-import java.util.List;
+import java.util.*;
 
 import static org.junit.jupiter.api.Assertions.*;
 
 class UserDataTest {
     private static UserData testUserData;
     private static List<TaskData> testTaskDatas;
-    private static List<String> singleTagsList = Arrays.asList("tag1");
-    private static List<String> doubleTagsList = Arrays.asList("tag1", "tag2");
-    private static List<String> tripleTagsList = Arrays.asList("tag1", "tag2", "tag3");
+    private static Set<String> singleTagsList = new HashSet<String>();
+    private static Set<String> doubleTagsList = new HashSet<String>();
+    private static Set<String> tripleTagsList = new HashSet<String>();
 
     @BeforeEach
     void setUp() {
+        singleTagsList.add("tag1");
+        doubleTagsList.add("tag1");
+        tripleTagsList.add("tag1");
+        doubleTagsList.add("tag2");
+        tripleTagsList.add("tag2");
+        tripleTagsList.add("tag3");
+
         testUserData = new UserData(
                 "user1",
                 0,
