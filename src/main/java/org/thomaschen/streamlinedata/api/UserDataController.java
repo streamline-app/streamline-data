@@ -5,12 +5,14 @@ import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.node.ArrayNode;
 import com.fasterxml.jackson.databind.node.ObjectNode;
+import org.apache.commons.math3.ml.clustering.CentroidCluster;
 import org.springframework.http.ResponseEntity;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.*;
 
 import org.thomaschen.streamlinedata.exceptions.InvalidArithmeticException;
 import org.thomaschen.streamlinedata.exceptions.ResourceNotFoundException;
+import org.thomaschen.streamlinedata.model.ClusterService;
 import org.thomaschen.streamlinedata.model.TaskData;
 import org.thomaschen.streamlinedata.model.UserData;
 import org.thomaschen.streamlinedata.repository.TaskDataRepository;
@@ -18,9 +20,7 @@ import org.thomaschen.streamlinedata.repository.UserDataRepository;
 
 import javax.validation.Valid;
 import java.text.SimpleDateFormat;
-import java.util.List;
-import java.util.TimeZone;
-import java.util.UUID;
+import java.util.*;
 
 @RestController
 @RequestMapping("/api/users")
@@ -177,10 +177,19 @@ public class UserDataController {
     @PostMapping("/{id}/predictions")
     public Double getNewTaskPrediction(@PathVariable(value = "id") UUID id,
                                        @Valid @RequestBody TaskData taskData) {
-        UserData userData = userDataRepository.findById(id)
+        UserData owner = userDataRepository.findById(id)
                 .orElseThrow( () -> new ResourceNotFoundException("UserData", "id", id));
 
-        return taskData.getExpDuration() + userData.getAvgTaskTime() / 2;
+        List<TaskData> points = taskDataRepository.findAllByOwner(owner);
+
+        if (points == null) {
+            throw new ResourceNotFoundException("Tasks", "user", id);
+        }
+
+        taskData.setOwner(owner);
+        taskData.setCreatedAt(Calendar.getInstance(TimeZone.getTimeZone("UTC")));
+
+        return ClusterService.clusterPredict(points, taskData, owner);
     }
 
     // Get UUID from name

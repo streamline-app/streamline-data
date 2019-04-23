@@ -144,6 +144,15 @@ public class TaskData implements Clusterable, DistanceMeasure {
         this.tags = tags;
     }
 
+    public static double calcAvgWorkedDuration(List<TaskData> tasks) {
+        double avg = 0;
+        for (TaskData task : tasks) {
+            avg += task.getActualDuration();
+        }
+        avg /= tasks.size();
+        return avg;
+    }
+
     @Override
     public String toString() {
         return "TaskData{" +
@@ -160,7 +169,7 @@ public class TaskData implements Clusterable, DistanceMeasure {
     @Override
     public double[] getPoint() {
         double[] tagPts = this.getOwner().calcTaskTagMask(this);
-        double[] statPts = {(double) expDuration, (double) actualDuration, (double) createdAt.getTimeInMillis()};
+        double[] statPts = {(double) expDuration, (double) actualDuration};
 
         double[] points = new double[tagPts.length + statPts.length];
 
