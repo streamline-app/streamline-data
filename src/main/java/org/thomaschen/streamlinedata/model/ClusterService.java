@@ -24,6 +24,9 @@ public class ClusterService {
     }
 
     public static double clusterPredict(List<TaskData> points, TaskData target, UserData owner) {
+        System.err.println("========================================================================================");
+        System.err.println("1. CLUSTERING PHASE");
+        System.err.println("========================================================================================");
         int k = calcK( points.size() );
         System.err.println("K FACTOR: " + k);
 
@@ -41,17 +44,18 @@ public class ClusterService {
             }
         }
 
-        System.err.println("========================================================================================");
         System.err.println("TARGET DATA POINT: " + Arrays.toString(target.getPoint()));
-        System.err.println("========================================================================================");
         System.err.println("SELECTED CLUSTER: ");
         System.err.println("CENTROID: " + Arrays.toString(targetCluster.getCenter().getPoint()));
         for (TaskData td : targetCluster.getPoints()) {
             System.err.println(Arrays.toString(td.getPoint()));
         }
 
-        return targetCluster.getCenter().getPoint()[0];
+        System.err.println("========================================================================================");
+        System.err.println("2. REGRESSION PHASE");
+        System.err.println("========================================================================================");
 
+        return RegressionService.ensembleSLSPrediction(currentClusters, target);
     }
 
     public static List<CentroidCluster<TaskData>> exeKmeansCluster(List<TaskData> points, int k) {
