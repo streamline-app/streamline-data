@@ -24,6 +24,11 @@ public class ClusterService {
     }
 
     public static double clusterPredict(List<TaskData> points, TaskData target, UserData owner) {
+        // If data set is insufficient to handle clustering return simple average
+        if (points.size() < 8) {
+            return TaskData.calcAvgWorkedDuration(points);
+        }
+
         System.err.println("========================================================================================");
         System.err.println("1. CLUSTERING PHASE");
         System.err.println("========================================================================================");

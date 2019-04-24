@@ -10,6 +10,8 @@ import java.util.Arrays;
 import java.util.DoubleSummaryStatistics;
 import java.util.List;
 
+import static java.lang.Double.NaN;
+
 @Service
 public class RegressionService {
 
@@ -148,10 +150,12 @@ public class RegressionService {
     private static double calcEnsemblePred(double[] weights, double[] predictions) {
         double ensemblePred = 0.0;
         for (int j = 0; j < weights.length; j++) {
-            ensemblePred += weights[j] * predictions[j];
+            if (!Double.isNaN(weights[j]) && !Double.isNaN(predictions[j])) {
+                ensemblePred += weights[j] * predictions[j];
+            }
         }
         ensemblePred /= weights.length;
-        return ensemblePred;
+        return Math.abs(ensemblePred);
     }
 
     private static double[] normalizeWeights(double[] weights) {
